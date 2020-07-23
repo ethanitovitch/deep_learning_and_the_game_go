@@ -35,7 +35,7 @@ class GoDataProcessor:
                 indices_by_zip_name[filename] = []
             indices_by_zip_name[filename].append(index)
         for zip_name in zip_names:
-            base_name = zip_name.repalce('.tar.gz', '')
+            base_name = zip_name.replace('.tar.gz', '')
             data_file_name = base_name + data_type
             if not os.path.isfile(self.data_dir + '/' + data_file_name):
                 self.process_zip(zip_name, data_file_name, indices_by_zip_name[zip_name])
@@ -49,7 +49,7 @@ class GoDataProcessor:
         name_list = zip_file.getnames()
         total_examples = self.num_total_examples(zip_file, game_list, name_list)
 
-        shape = self.ecoder.shape()
+        shape = self.encoder.shape()
         feature_shape = np.insert(shape, 0, np.asarray([total_examples]))
         features = np.zeros(feature_shape)
         labels = np.zeros((total_examples,))
@@ -156,6 +156,16 @@ class GoDataProcessor:
         np.save('{}/labels{}.npy'.format(self.data_dir, data_type), labels)
 
         return features, labels
+
+    def unzip_data(self, zip_file_name):
+        this_gz = gzip.open(self.data_dir + '/' + zip_file_name)  # <1>
+
+        tar_file = zip_file_name[0:-3]  # <2>
+        this_tar = open(self.data_dir + '/' + tar_file, 'wb')
+
+        shutil.copyfileobj(this_gz, this_tar)  # <3>
+        this_tar.close()
+        return tar_file
 
     def generate(self, batch_size=128, num_classes=19*19):
         while True:
